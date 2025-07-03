@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <title>Nosso Mundo 💖</title>
+  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-database-compat.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lightbox2@2.11.4/dist/js/lightbox.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/lightbox2@2.11.4/dist/css/lightbox.min.css" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fff0f5;
+      color: #4a004e;
+      margin: 0;
+      padding: 0;
+    }
+    header {
+      background: #800080;
+      color: white;
+      padding: 15px;
+      display: flex;
+      align-items: center;
+    }
+    .menu-icon {
+      font-size: 24px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    .menu {
+      position: absolute;
+      top: 60px;
+      left: 0;
+      background: #fff;
+      border: 1px solid #ccc;
+      border-radius: 0 6px 6px 0;
+      display: none;
+      flex-direction: column;
+      padding: 10px;
+      z-index: 100;
+    }
+    .menu a {
+      text-decoration: none;
+      color: #4a004e;
+      padding: 8px 10px;
+      display: block;
+    }
+    .menu a:hover {
+      background-color: #f3e6f5;
+    }
+    .menu a.logout {
+      font-size: 12px;
+      color: #999;
+      margin-top: 10px;
+    }
+    .page {
+      display: none;
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+    }
+    .active {
+      display: block;
+    }
+    h1 {
+      text-align: center;
+      color: #800080;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #800080;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #a64ca6;
+    }
+    ul { margin-top: 20px; padding-left: 20px; }
+    li { margin-bottom: 12px; line-height: 1.4; position: relative; }
+    .grid-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .grid-gallery img {
+      width: 100%;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    #drop-area {
+      border: 2px dashed #800080;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      color: #800080;
+      font-weight: bold;
+      margin-top: 10px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    #drop-area.hover {
+      background-color: #f3e6f5;
+    }
+    audio {
+      width: 100%;
+      margin-top: 5px;
+      outline: none;
+      border-radius: 6px;
+    }
+
+    /* Menu três pontinhos e dropdown excluir */
+    .menu-dots {
+      cursor: pointer;
+      font-size: 20px;
+      color: #800080;
+      user-select: none;
+      position: absolute;
+      top: 5px;
+      right: 5px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      transition: background-color 0.2s;
+    }
+    .menu-dots:hover {
+      background-color: #f3e6f5;
+    }
+    .dropdown-menu {
+      position: absolute;
+      top: 30px;
+      right: 5px;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      z-index: 200;
+    }
+    .dropdown-menu .btn-delete {
+      background: none;
+      border: none;
+      color: #cc0000;
+      padding: 8px 12px;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+      font-size: 14px;
+      border-radius: 0 0 6px 6px;
+    }
+    .dropdown-menu .btn-delete:hover {
+      background-color: #ffdddd;
+    }
+
+    /* Barra de progresso */
+    .progress-container {
+      width: 100%;
+      background-color: #ddd;
+      border-radius: 6px;
+      margin-top: 8px;
+      height: 14px;
+      overflow: hidden;
+    }
+    .progress-bar {
+      height: 14px;
+      width: 0%;
+      background-color: #800080;
+      transition: width 0.3s ease;
+    }
+
+    
+  </style>
+</head>
+<body>
+  <header>
+    <span class="menu-icon" onclick="toggleMenu()">☰</span>
+    <h2 style="margin:0;">Nosso Mundo 💖</h2>
+  </header>
+
+  <div class="menu" id="menu">
+    <a href="#" onclick="mostrarPagina('banco')">🏦 Banco do Casal</a>
+    <a href="#" onclick="mostrarPagina('galeria')">🖼️ Mundo do Casal</a>
+    <a href="#" onclick="mostrarPagina('playlist')">🎵 Playlist do casal</a>
+    <a href="#" class="logout" onclick="logout()">Sair</a>
+  </div>
+
+  <div class="page" id="loginPage">
+    <h1>🔐 Login do Casal</h1>
+    <input id="email" type="email" placeholder="Seu e-mail" />
+    <input id="senha" type="password" placeholder="Sua senha" />
+    <button onclick="login()">Entrar</button>
+  </div>
+
+  <div class="page" id="homePage">
+    <h1>✨ Bem-vindos ao Nosso Mundo!</h1>
+    <p style="text-align:center;">Use o menu ☰ para navegar entre o Banco do Casal, Mundo do Casal e Playlist do casal.</p>
+  </div>
+
+  <div class="page" id="banco">
+    <h1>💰 Banco do Casal</h1>
+    <input id="valor" type="number" step="0.01" placeholder="Quanto colocou ou retirou?" />
+    <input id="comentario" placeholder="Comentário (opcional)" />
+    <button onclick="salvarValor()">Salvar no Cofre</button>
+    <div id="total">Total no Cofre: Carregando...</div>
+    <ul id="historico"></ul>
+    <button onclick="mostrarPagina('home')">⬅️ Voltar</button>
+  </div>
+
+  <div class="page" id="galeria">
+    <h1>📸 Mundo do Casal</h1>
+    <div id="drop-area">
+      Arraste a foto aqui ou clique para selecionar
+      <input type="file" id="fotoInput" accept="image/*" style="display:none" />
+    </div>
+    <button onclick="enviarFoto()">Enviar Foto</button>
+
+    <!-- Barra de progresso para foto -->
+    <div id="progressContainerFoto" class="progress-container" style="display:none;">
+      <div id="progressBarFoto" class="progress-bar"></div>
+    </div>
+
+    <div class="grid-gallery" id="fotos"></div>
+    <button onclick="mostrarPagina('home')">⬅️ Voltar</button>
+  </div>
+
+  <div class="page" id="playlist">
+    <h1>🎵 Playlist do casal</h1>
+    <input id="musicaNome" placeholder="Nome da música" />
+    <input id="musicaURL" placeholder="URL do áudio (mp3, etc.)" />
+    <button onclick="adicionarMusica()">Adicionar música</button>
+    <button onclick="selecionarArquivoMusica()">📁 Fazer upload de arquivo</button>
+
+    <!-- Barra de progresso para música -->
+    <div id="progressContainerMusica" class="progress-container" style="display:none;">
+      <div id="progressBarMusica" class="progress-bar"></div>
+    </div>
+
+    <ul id="listaMusicas" style="margin-top:20px; position: relative;"></ul>
+    <button onclick="mostrarPagina('home')">⬅️ Voltar</button>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDWx9QuA1Grn9IFUPW6joi9abJ6vauJwhA",
+      authDomain: "banco-do-casal.firebaseapp.com",
+      databaseURL: "https://banco-do-casal-default-rtdb.firebaseio.com",
+      projectId: "banco-do-casal",
+      storageBucket: "banco-do-casal.appspot.com",
+      messagingSenderId: "746152300673",
+      appId: "1:746152300673:web:a10431de2913cb381ebd80"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+
+    const nomes = {
+      "divinaraulra@gmail.com": "Raul 💙",
+      "layanefaria09@gmail.com": "Layane 💖"
+    };
+
+    function toggleMenu() {
+      const menu = document.getElementById("menu");
+      menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+    }
+
+    function mostrarPagina(pagina) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pagina + 'Page')?.classList.add('active');
+      document.getElementById(pagina)?.classList.add('active');
+      if (pagina === 'banco') carregarDados();
+      if (pagina === 'galeria') carregarFotos();
+      if (pagina === 'playlist') carregarPlaylist();
+      document.getElementById("menu").style.display = "none";
+    }
+
+    auth.onAuthStateChanged(user => {
+      if (user) mostrarPagina('home');
+      else mostrarPagina('login');
+    });
+
+    function login() {
+      const email = document.getElementById("email").value.trim();
+      const senha = document.getElementById("senha").value.trim();
+      auth.signInWithEmailAndPassword(email, senha).catch(e => alert("Erro ao fazer login: " + e.message));
+    }
+
+    function logout() {
+      auth.signOut();
+    }
+
+    function salvarValor() {
+      const user = auth.currentUser;
+      const valor = parseFloat(document.getElementById("valor").value);
+      const comentario = document.getElementById("comentario").value.trim();
+      if (!user || isNaN(valor) || valor === 0) return alert("Preencha corretamente!");
+      const nome = nomes[user.email] || user.email;
+      const novaEntrada = {
+        nome,
+        valor,
+        comentario,
+        tipo: valor > 0 ? "Depositou" : "Retirou",
+        data: new Date().toLocaleString()
+      };
+      db.ref("cofre").push(novaEntrada, error => {
+        if (!error) {
+          document.getElementById("valor").value = "";
+          document.getElementById("comentario").value = "";
+          carregarDados();
+        } else alert("Erro ao salvar!");
+      });
+    }
+
+    function carregarDados() {
+      db.ref("cofre").once("value", snapshot => {
+        const dados = snapshot.val();
+        const historico = document.getElementById("historico");
+        const totalDiv = document.getElementById("total");
+        historico.innerHTML = "";
+        let total = 0;
+        for (let id in dados) {
+          const e = dados[id];
+          total += e.valor;
+          historico.innerHTML += `<li style="color: ${e.valor >= 0 ? 'green' : 'red'};"><strong>${e.nome}</strong> ${e.tipo.toLowerCase()} <strong>R$${Math.abs(e.valor).toFixed(2)}</strong><br><small>${e.data} – ${e.comentario || ''}</small></li>`;
+        }
+        totalDiv.innerHTML = `💰 <strong>Total no Cofre:</strong> R$ ${total.toFixed(2)}`;
+      });
+    }
+
+    const dropArea = document.getElementById('drop-area');
+    const fotoInput = document.getElementById('fotoInput');
+
+    dropArea.addEventListener('click', () => fotoInput.click());
+    dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.classList.add('hover'); });
+    dropArea.addEventListener('dragleave', e => { e.preventDefault(); dropArea.classList.remove('hover'); });
+    dropArea.addEventListener('drop', e => {
+      e.preventDefault();
+      dropArea.classList.remove('hover');
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        fotoInput.files = files;
+        enviarFoto();
+      }
+    });
+
+    fotoInput.addEventListener('change', enviarFoto);
+
+    function enviarFoto() {
+      const file = fotoInput.files[0];
+      if (!file) return alert("Selecione uma foto!");
+
+      const progressContainer = document.getElementById('progressContainerFoto');
+      const progressBar = document.getElementById('progressBarFoto');
+      progressContainer.style.display = 'block';
+      progressBar.style.width = '0%';
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "casal_uploads");
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', 'https://api.cloudinary.com/v1_1/dr8wp80aw/image/upload');
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = (event.loaded / event.total) * 100;
+          progressBar.style.width = percent + '%';
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText);
+          const url = data.secure_url;
+          db.ref("fotos").push({ url, data: new Date().toLocaleString() });
+          carregarFotos();
+          fotoInput.value = "";
+        } else {
+          alert("Erro ao enviar foto!");
+        }
+        progressContainer.style.display = 'none';
+      };
+
+      xhr.onerror = () => {
+        alert("Erro ao enviar foto!");
+        progressContainer.style.display = 'none';
+      };
+
+      xhr.send(formData);
+    }
+
+    function carregarFotos() {
+      const fotosDiv = document.getElementById("fotos");
+      fotosDiv.innerHTML = "Carregando fotos...";
+      db.ref("fotos").once("value", snapshot => {
+        const dados = snapshot.val();
+        fotosDiv.innerHTML = "";
+        if (!dados) return fotosDiv.innerHTML = "Nenhuma foto enviada ainda.";
+        Object.values(dados).reverse().forEach(foto => {
+          fotosDiv.innerHTML += `<a href="${foto.url}" data-lightbox="galeria" data-title="${foto.data}"><img src="${foto.url}" alt="Foto do casal"></a>`;
+        });
+      });
+    }
+
+    function adicionarMusica() {
+      const nome = document.getElementById("musicaNome").value.trim();
+      const url = document.getElementById("musicaURL").value.trim();
+      if (!nome || !url) return alert("Preencha nome e URL da música!");
+      const novaMusica = { nome, url, data: new Date().toLocaleString() };
+      db.ref("playlist").push(novaMusica, error => {
+        if (!error) {
+          document.getElementById("musicaNome").value = "";
+          document.getElementById("musicaURL").value = "";
+          carregarPlaylist();
+        } else alert("Erro ao adicionar música!");
+      });
+    }
+
+    function carregarPlaylist() {
+      const lista = document.getElementById("listaMusicas");
+      lista.innerHTML = "Carregando playlist...";
+      db.ref("playlist").once("value", snapshot => {
+        const dados = snapshot.val();
+        lista.innerHTML = "";
+        if (!dados) return lista.innerHTML = "<li>Nenhuma música adicionada ainda.</li>";
+        Object.entries(dados).reverse().forEach(([key, musica]) => {
+          lista.innerHTML += `
+            <li style="margin-bottom: 15px; position: relative;">
+              <strong>${musica.nome}</strong><br>
+              <audio controls src="${musica.url}"></audio>
+              <small style="color:#666;"> Adicionado em: ${musica.data}</small>
+
+              <div class="menu-dots" onclick="toggleMenuDots(event, '${key}')">⋮</div>
+              <div class="dropdown-menu" id="menu-${key}" style="display:none;">
+                <button class="btn-delete" onclick="excluirMusica('${key}')">Excluir</button>
+              </div>
+            </li>
+          `;
+        });
+      });
+    }
+
+    function excluirMusica(key) {
+      if (confirm("Tem certeza que deseja excluir esta música?")) {
+        db.ref("playlist/" + key).remove().then(() => {
+          carregarPlaylist();
+        }).catch(() => alert("Erro ao excluir música."));
+      }
+    }
+
+    // Função para abrir/fechar o menu dos três pontinhos
+    function toggleMenuDots(event, key) {
+      event.stopPropagation();
+      const menu = document.getElementById(`menu-${key}`);
+      // Fecha outros menus abertos
+      document.querySelectorAll('.dropdown-menu').forEach(m => {
+        if (m.id !== `menu-${key}`) m.style.display = 'none';
+      });
+      menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+    }
+
+    // Fecha menus se clicar fora
+    document.addEventListener('click', () => {
+      document.querySelectorAll('.dropdown-menu').forEach(m => m.style.display = 'none');
+    });
+
+    // Upload manual de música com barra de progresso
+    const musicaInput = document.createElement('input');
+    musicaInput.type = 'file';
+    musicaInput.accept = 'audio/*';
+    musicaInput.style.display = 'none';
+    document.body.appendChild(musicaInput);
+
+    function selecionarArquivoMusica() {
+      musicaInput.click();
+    }
+
+    musicaInput.addEventListener('change', () => {
+      const file = musicaInput.files[0];
+      if (!file) return;
+      const nome = prompt("Nome da música:");
+      if (!nome) return;
+
+      const progressContainer = document.getElementById('progressContainerMusica');
+      const progressBar = document.getElementById('progressBarMusica');
+      progressContainer.style.display = 'block';
+      progressBar.style.width = '0%';
+
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("upload_preset", "casal_uploads");
+
+      const xhr = new XMLHttpRequest();
+      xhr.open("POST", "https://api.cloudinary.com/v1_1/dr8wp80aw/raw/upload");
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percent = (event.loaded / event.total) * 100;
+          progressBar.style.width = percent + "%";
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          const data = JSON.parse(xhr.responseText);
+          const url = data.secure_url;
+          db.ref("playlist").push({ nome, url, data: new Date().toLocaleString() });
+          carregarPlaylist();
+          alert("Música enviada com sucesso!");
+        } else {
+          alert("Erro ao enviar música.");
+        }
+        progressContainer.style.display = 'none';
+      };
+
+      xhr.onerror = () => {
+        alert("Erro ao enviar música.");
+        progressContainer.style.display = 'none';
+      };
+
+      xhr.send(formData);
+    });
+  </script>
+</body>
+</html>
